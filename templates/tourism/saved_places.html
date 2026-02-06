@@ -1,0 +1,87 @@
+{% extends 'tourism/base.html' %}
+{% load static %}
+{% load localization_tags %}
+
+{% block title %}{% if LANGUAGE_CODE == 'ar' %}الأماكن المحفوظة{% else %}Saved Places{% endif %} - EgyRoute{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <h2 class="mb-4">
+        <i class="fas fa-bookmark text-success"></i>
+        {% if LANGUAGE_CODE == 'ar' %}الأماكن المحفوظة{% else %}Saved Places{% endif %}
+    </h2>
+    
+    {% if saved_places %}
+        <div class="row g-4">
+            {% for saved in saved_places %}
+                <div class="col-md-4">
+                    <div class="card h-100 shadow-sm">
+                        {% if saved.place.main_image %}
+                            <img src="{{ saved.place.main_image.url }}" class="card-img-top" alt="{{ saved.place.name }}" style="height: 200px; object-fit: cover;">
+                        {% else %}
+                            <div class="bg-secondary text-white d-flex align-items-center justify-content-center" style="height: 200px;">
+                                <i class="fas fa-image fa-3x"></i>
+                            </div>
+                        {% endif %}
+                        
+                        <div class="card-body">
+                            <h5 class="card-title">{% get_localized_field saved.place 'name' %}</h5>
+                            <p class="text-muted">
+                                <i class="fas fa-map-marker-alt"></i> {% get_localized_field saved.place.governorate 'name' %}
+                            </p>
+                            <p class="card-text">{% get_localized_field saved.place 'short_description' as short_desc %}{{ short_desc|truncatewords:15 }}</p>
+                            
+                            {% if saved.notes %}
+                                <div class="alert alert-info small">
+                                    <strong>{% if LANGUAGE_CODE == 'ar' %}ملاحظاتي:{% else %}My Notes:{% endif %}</strong> {{ saved.notes }}
+                                </div>
+                            {% endif %}
+                            
+                            <div class="d-flex justify-content-between align-items-center">
+                                <a href="{% url 'tourism:place_detail' saved.place.slug %}" class="btn btn-primary">
+                                    <i class="fas fa-eye"></i> {% if LANGUAGE_CODE == 'ar' %}عرض التفاصيل{% else %}View Details{% endif %}
+                                </a>
+                                <button class="btn btn-outline-danger" onclick="removeSavedPlace({{ saved.place.id }})">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="card-footer text-muted small">
+                            {% if LANGUAGE_CODE == 'ar' %}حُفظ في{% else %}Saved on{% endif %} {{ saved.created_at|date:"Y/m/d" }}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-info text-center">
+            <h4><i class="fas fa-info-circle"></i> {% if LANGUAGE_CODE == 'ar' %}لا توجد أماكن محفوظة{% else %}No saved places{% endif %}</h4>
+            <p>{% if LANGUAGE_CODE == 'ar' %}يمكنك حفظ الأماكن التي تهمك أثناء تصفح المواقع السياحية{% else %}You can save places that interest you while browsing tourist sites{% endif %}</p>
+            <a href="{% url 'tourism:all_places' %}" class="btn btn-primary">
+                <i class="fas fa-search"></i> {% if LANGUAGE_CODE == 'ar' %}استكشف الأماكن السياحية{% else %}Explore Tourist Places{% endif %}
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+function removeSavedPlace(placeId) {
+    if (confirm('هل تريد إزالة هذا المكان من المحفوظات؟')) {
+        fetch(`/toggle-save-place/${placeId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'removed') {
+                location.reload();
+            }
+        });
+    }
+}
+</script>
+{% endblock %}

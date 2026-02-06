@@ -1,0 +1,268 @@
+{% extends 'tourism/base.html' %}
+{% load humanize %}
+{% load localization_tags %}
+
+{% block title %}{% get_localized_field place 'name' %} - {{ SITE_NAME }}{% endblock %}
+
+{% block meta_description %}{% get_localized_field place 'short_description' %}{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'tourism:home' %}">{% if LANGUAGE_CODE == 'ar' %}الرئيسية{% else %}Home{% endif %}</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'tourism:category_detail' place.category.slug %}">{% get_localized_field place.category 'name' %}</a></li>
+            <li class="breadcrumb-item active">{% get_localized_field place 'name' %}</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <!-- Main Content -->
+        <div class="col-lg-8">
+            <!-- Title & Badges -->
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <h1 class="mb-0">{% get_localized_field place 'name' %}</h1>
+                {% if user.is_authenticated %}
+                <button class="btn btn-outline-danger" id="saveBtn" onclick="toggleSave()">
+                    <i class="fas fa-bookmark"></i> {% if LANGUAGE_CODE == 'ar' %}حفظ{% else %}Save{% endif %}
+                </button>
+                {% endif %}
+            </div>
+            <div class="mb-4">
+                <span class="badge bg-primary">{% get_localized_field place.category 'name' %}</span>
+                <span class="badge bg-info">{% get_localized_field place.governorate 'name' %} - {% get_localized_field place 'city' %}</span>
+                {% if place.is_featured %}
+                <span class="badge bg-warning text-dark">
+                    <i class="fas fa-star"></i> {% if LANGUAGE_CODE == 'ar' %}مميز{% else %}Featured{% endif %}
+                </span>
+                {% endif %}
+            </div>
+
+            <!-- Image Gallery -->
+            <div class="mb-4">
+                {% with main_image=place.get_main_image %}
+                {% if main_image %}
+                    <img src="{{ main_image.image.url }}" class="img-fluid rounded shadow" alt="{% get_localized_field place 'name' %}" style="width: 100%; max-height: 500px; object-fit: cover;">
+                {% endif %}
+                {% endwith %}
+                
+                <!-- Thumbnails -->
+                {% if place.images.count > 1 %}
+                <div class="row g-2 mt-3">
+                    {% for image in place.images.all %}
+                    <div class="col-3">
+                        <img src="{{ image.image.url }}" class="img-fluid rounded" alt="{{ image.caption }}" style="height: 100px; object-fit: cover; width: 100%; cursor: pointer;">
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Description -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h3 class="card-title">{% if LANGUAGE_CODE == 'ar' %}نبذة عن الموقع{% else %}About the Place{% endif %}</h3>
+                    <p class="lead">{% get_localized_field place 'short_description' %}</p>
+                    <hr>
+                    <div class="content">
+                        {% get_localized_field place 'description' as place_desc %}{{ place_desc|safe }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Visitor Tips -->
+            {% get_localized_field place 'visitor_tips' as visitor_tips %}
+            {% if visitor_tips %}
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h3 class="card-title">
+                        <i class="fas fa-lightbulb text-warning"></i> {% if LANGUAGE_CODE == 'ar' %}نصائح للزائر{% else %}Visitor Tips{% endif %}
+                    </h3>
+                    <div class="content">
+                        {{ visitor_tips|safe }}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Map -->
+            {% if place.latitude and place.longitude %}
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h3 class="card-title">
+                        <i class="fas fa-map-marker-alt text-danger"></i> {% if LANGUAGE_CODE == 'ar' %}الموقع على الخريطة{% else %}Location on Map{% endif %}
+                    </h3>
+                    <div id="map" style="height: 400px; border-radius: 10px;"></div>
+                    <div class="mt-3">
+                        <a href="https://www.google.com/maps?q={{ place.latitude }},{{ place.longitude }}" 
+                           target="_blank" 
+                           class="btn btn-outline-primary">
+                            <i class="fas fa-external-link-alt"></i> {% if LANGUAGE_CODE == 'ar' %}فتح في خرائط جوجل{% else %}Open in Google Maps{% endif %}
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Quick Info -->
+            <div class="card mb-4 sticky-top" style="top: 20px;">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">{% if LANGUAGE_CODE == 'ar' %}معلومات الزيارة{% else %}Visit Information{% endif %}</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li class="mb-3">
+                            <i class="fas fa-clock text-primary"></i>
+                            <strong>{% if LANGUAGE_CODE == 'ar' %}مدة الزيارة المقترحة:{% else %}Suggested Duration:{% endif %}</strong><br>
+                            <span class="ms-4">{{ place.get_suggested_duration_display }}</span>
+                        </li>
+                        
+                        {% get_localized_field place 'best_time_to_visit' as best_time %}
+                        {% if best_time %}
+                        <li class="mb-3">
+                            <i class="fas fa-calendar-check text-primary"></i>
+                            <strong>{% if LANGUAGE_CODE == 'ar' %}أفضل وقت للزيارة:{% else %}Best Time to Visit:{% endif %}</strong><br>
+                            <span class="ms-4">{{ best_time }}</span>
+                        </li>
+                        {% endif %}
+                        
+                        {% get_localized_field place 'entry_fee' as entry_fee %}
+                        {% if entry_fee %}
+                        <li class="mb-3">
+                            <i class="fas fa-ticket-alt text-primary"></i>
+                            <strong>{% if LANGUAGE_CODE == 'ar' %}رسوم الدخول:{% else %}Entry Fee:{% endif %}</strong><br>
+                            <span class="ms-4">{{ entry_fee }}</span>
+                        </li>
+                        {% endif %}
+                        
+                        <li class="mb-3">
+                            <i class="fas fa-map-marker-alt text-primary"></i>
+                            <strong>{% if LANGUAGE_CODE == 'ar' %}الموقع:{% else %}Location:{% endif %}</strong><br>
+                            <span class="ms-4">{% get_localized_field place.governorate 'name' %} - {% get_localized_field place 'city' %}</span>
+                        </li>
+                        
+                        <li class="mb-3">
+                            <i class="fas fa-eye text-primary"></i>
+                            <strong>{% if LANGUAGE_CODE == 'ar' %}المشاهدات:{% else %}Views:{% endif %}</strong><br>
+                            <span class="ms-4">{{ place.view_count|intcomma }}</span>
+                        </li>
+                    </ul>
+                    
+                    <hr>
+                    
+                    <!-- WhatsApp Button -->
+                    {% get_localized_field place 'name' as place_name %}
+                    <a href="https://wa.me/{{ WHATSAPP_NUMBER }}?text={% if LANGUAGE_CODE == 'ar' %}مرحباً، أود الاستفسار عن{% else %}Hello, I would like to inquire about{% endif %} {{ place_name }}" 
+                       target="_blank" 
+                       class="btn btn-success w-100 mb-2">
+                        <i class="fab fa-whatsapp"></i> {% if LANGUAGE_CODE == 'ar' %}استفسر عبر واتساب{% else %}Inquire via WhatsApp{% endif %}
+                    </a>
+                    
+                    <!-- Share Button -->
+                    <button class="btn btn-outline-primary w-100" onclick="sharePlace()">
+                        <i class="fas fa-share-alt"></i> {% if LANGUAGE_CODE == 'ar' %}مشاركة{% else %}Share{% endif %}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Related Places -->
+    {% if related_places %}
+    <section class="mt-5">
+        <h2 class="section-title">{% if LANGUAGE_CODE == 'ar' %}مواقع مشابهة{% else %}Similar Places{% endif %}</h2>
+        <div class="row g-4">
+            {% for related in related_places %}
+            <div class="col-md-3">
+                <div class="card h-100">
+                    {% with main_image=related.get_main_image %}
+                    {% if main_image %}
+                        <img src="{{ main_image.image.url }}" class="card-img-top" alt="{% get_localized_field related 'name' %}">
+                    {% else %}
+                        <img src="https://via.placeholder.com/300x200?text={% get_localized_field related 'name' %}" class="card-img-top" alt="{% get_localized_field related 'name' %}">
+                    {% endif %}
+                    {% endwith %}
+                    <div class="card-body">
+                        <h6 class="card-title">{% get_localized_field related 'name' %}</h6>
+                        <p class="card-text text-muted small">{% get_localized_field related 'short_description' as related_desc %}{{ related_desc|truncatewords:10 }}</p>
+                    </div>
+                    <div class="card-footer bg-transparent">
+                        <a href="{% url 'tourism:place_detail' related.slug %}" class="btn btn-sm btn-outline-primary w-100">
+                            {% if LANGUAGE_CODE == 'ar' %}اكتشف المزيد{% else %}Discover More{% endif %}
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if place.latitude and place.longitude %}
+<script>
+    // Initialize map
+    var map = L.map('map').setView([{{ place.latitude }}, {{ place.longitude }}], 13);
+    
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+    
+    var marker = L.marker([{{ place.latitude }}, {{ place.longitude }}]).addTo(map);
+    marker.bindPopup("<b>{{ place.name }}</b><br>{{ place.city }}").openPopup();
+</script>
+{% endif %}
+
+<script>
+    function sharePlace() {
+        if (navigator.share) {
+            navigator.share({
+                title: '{{ place.name }}',
+                text: '{{ place.short_description }}',
+                url: window.location.href
+            });
+        } else {
+            // Fallback: copy to clipboard
+            navigator.clipboard.writeText(window.location.href);
+            alert('تم نسخ الرابط!');
+        }
+    }
+    
+    {% if user.is_authenticated %}
+    function toggleSave() {
+        fetch('{% url "tourism:toggle_save_place" place.id %}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            const btn = document.getElementById('saveBtn');
+            if (data.status === 'saved') {
+                btn.className = 'btn btn-danger';
+                btn.innerHTML = '<i class="fas fa-bookmark"></i> محفوظ';
+            } else {
+                btn.className = 'btn btn-outline-danger';
+                btn.innerHTML = '<i class="fas fa-bookmark"></i> حفظ';
+            }
+            
+            // Show toast or alert
+            const toast = document.createElement('div');
+            toast.className = 'alert alert-success alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3';
+            toast.style.zIndex = '9999';
+            toast.innerHTML = data.message + '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>';
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        });
+    }
+    {% endif %}
+</script>
+{% endblock %}

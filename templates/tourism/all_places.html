@@ -1,0 +1,114 @@
+{% extends 'tourism/base.html' %}
+{% load localization_tags %}
+
+{% block title %}{% if LANGUAGE_CODE == 'ar' %}جميع المواقع السياحية{% else %}All Tourist Places{% endif %} - {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <h1 class="mb-4">{% if LANGUAGE_CODE == 'ar' %}جميع المواقع السياحية{% else %}All Tourist Places{% endif %}</h1>
+
+    <!-- Search & Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <input type="text" name="q" class="form-control" placeholder="{% if LANGUAGE_CODE == 'ar' %}ابحث عن موقع...{% else %}Search for a place...{% endif %}" value="{{ search_query|default:'' }}">
+                </div>
+                <div class="col-md-3">
+                    <select name="category" class="form-select">
+                        <option value="">{% if LANGUAGE_CODE == 'ar' %}كل الأقسام{% else %}All Categories{% endif %}</option>
+                        {% for cat in categories %}
+                        <option value="{{ cat.slug }}" {% if selected_category == cat.slug %}selected{% endif %}>
+                            {% get_localized_field cat 'name' %}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select name="governorate" class="form-select">
+                        <option value="">{% if LANGUAGE_CODE == 'ar' %}كل المحافظات{% else %}All Governorates{% endif %}</option>
+                        {% for gov in governorates %}
+                        <option value="{{ gov.slug }}" {% if selected_governorate == gov.slug %}selected{% endif %}>
+                            {% get_localized_field gov 'name' %}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-search"></i> {% if LANGUAGE_CODE == 'ar' %}بحث{% else %}Search{% endif %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Results Count -->
+    <div class="mb-3">
+        <span class="text-muted">{% if LANGUAGE_CODE == 'ar' %}عدد النتائج:{% else %}Results:{% endif %} <strong>{{ places.paginator.count }}</strong></span>
+    </div>
+
+    <!-- Places Grid -->
+    <div class="row g-4 mb-4">
+        {% for place in places %}
+        <div class="col-md-4">
+            <div class="card h-100">
+                {% with main_image=place.get_main_image %}
+                {% if main_image %}
+                    <img src="{{ main_image.image.url }}" class="card-img-top" alt="{% get_localized_field place 'name' %}">
+                {% else %}
+                    <img src="https://via.placeholder.com/400x250?text={% get_localized_field place 'name' %}" class="card-img-top" alt="{% get_localized_field place 'name' %}">
+                {% endif %}
+                {% endwith %}
+                <div class="card-body">
+                    <div class="mb-2">
+                        <span class="badge bg-primary">{% get_localized_field place.category 'name' %}</span>
+                        <span class="badge bg-info">{% get_localized_field place.governorate 'name' %}</span>
+                    </div>
+                    <h5 class="card-title">{% get_localized_field place 'name' %}</h5>
+                    <p class="card-text text-muted">{% get_localized_field place 'short_description' as short_desc %}{{ short_desc|truncatewords:15 }}</p>
+                </div>
+                <div class="card-footer bg-transparent">
+                    <a href="{% url 'tourism:place_detail' place.slug %}" class="btn btn-primary w-100">
+                        {% if LANGUAGE_CODE == 'ar' %}اكتشف المزيد{% else %}Discover More{% endif %}
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-warning text-center">
+                {% if LANGUAGE_CODE == 'ar' %}لم يتم العثور على نتائج{% else %}No results found{% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if places.has_other_pages %}
+    <nav>
+        <ul class="pagination justify-content-center">
+            {% if places.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ places.previous_page_number }}">{% if LANGUAGE_CODE == 'ar' %}السابق{% else %}Previous{% endif %}</a>
+            </li>
+            {% endif %}
+
+            {% for num in places.paginator.page_range %}
+            {% if places.number == num %}
+            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+            {% elif num > places.number|add:'-3' and num < places.number|add:'3' %}
+            <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+            {% endif %}
+            {% endfor %}
+
+            {% if places.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ places.next_page_number }}">{% if LANGUAGE_CODE == 'ar' %}التالي{% else %}Next{% endif %}</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}

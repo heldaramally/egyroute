@@ -1,0 +1,48 @@
+{% extends 'tourism/base.html' %}
+
+{% block title %}عن الموقع - {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <h1 class="text-center mb-4">عن EgyRoute</h1>
+            
+            <div class="card shadow-lg mb-4">
+                <div class="card-body p-5">
+                    <h3 class="text-primary mb-3">رؤيتنا</h3>
+                    <p>نسعى لأن نكون المرجع الأول والشامل لكل من يرغب في استكشاف جمال مصر وتاريخها العريق. نؤمن بأن مصر تحتضن كنوزاً حضارية لا تُقدر بثمن، ونهدف إلى تسهيل الوصول إليها وفهمها.</p>
+
+                    <h3 class="text-primary mb-3 mt-4">مهمتنا</h3>
+                    <p>نقدم دليلاً شاملاً ومفصلاً للمواقع السياحية في مصر عبر جميع أنواع السياحة:</p>
+                    <ul>
+                        <li><strong>السياحة الفرعونية:</strong> استكشف عظمة الحضارة المصرية القديمة</li>
+                        <li><strong>السياحة الإسلامية:</strong> تعرّف على روائع العمارة والتاريخ الإسلامي</li>
+                        <li><strong>السياحة القبطية:</strong> اكتشف المعالم المسيحية التاريخية</li>
+                    </ul>
+
+                    <h3 class="text-primary mb-3 mt-4">ما نقدمه</h3>
+                    <ul>
+                        <li>معلومات تفصيلية عن المواقع السياحية</li>
+                        <li>مواقع جغرافية دقيقة على الخرائط</li>
+                        <li>نصائح عملية للزوار</li>
+                        <li>برامج سياحية مخصصة حسب مدة الإقامة</li>
+                        <li>تواصل مباشر عبر WhatsApp للاستفسارات</li>
+                    </ul>
+
+                    <h3 class="text-primary mb-3 mt-4">اتصل بنا</h3>
+                    <p>نحن هنا لمساعدتك في التخطيط لرحلة لا تُنسى في مصر.</p>
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'tourism:contact' %}" class="btn btn-primary">
+                            <i class="fas fa-envelope"></i> أرسل رسالة
+                        </a>
+                        <a href="https://wa.me/{{ WHATSAPP_NUMBER }}" target="_blank" class="btn btn-success">
+                            <i class="fab fa-whatsapp"></i> تواصل عبر واتساب
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

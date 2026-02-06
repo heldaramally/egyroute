@@ -1,0 +1,46 @@
+/* Custom CSS for EgyRoute */
+
+/* Add any additional custom styles here */
+
+.hover-scale {
+    transition: transform 0.3s ease;
+}
+
+.hover-scale:hover {
+    transform: scale(1.05);
+}
+
+.text-justify {
+    text-align: justify;
+}
+
+.content img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 10px;
+    margin: 10px 0;
+}
+
+.content h2, .content h3 {
+    color: var(--primary-color);
+    margin-top: 20px;
+    margin-bottom: 15px;
+}
+
+.content ul, .content ol {
+    padding-right: 20px;
+}
+
+@media (max-width: 768px) {
+    .hero-section {
+        padding: 60px 0;
+    }
+    
+    .section-title {
+        font-size: 2rem;
+    }
+    
+    .stat-number {
+        font-size: 2rem;
+    }
+}

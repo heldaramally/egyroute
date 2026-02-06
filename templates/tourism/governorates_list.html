@@ -1,0 +1,33 @@
+{% extends 'tourism/base.html' %}
+{% load localization_tags %}
+
+{% block title %}{% if LANGUAGE_CODE == 'ar' %}المحافظات{% else %}Governorates{% endif %} - {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <h1 class="section-title text-center">{% if LANGUAGE_CODE == 'ar' %}المحافظات السياحية{% else %}Tourist Governorates{% endif %}</h1>
+    
+    <div class="row g-4">
+        {% for governorate in governorates %}
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-city fa-3x text-primary mb-3"></i>
+                    <h4>{% get_localized_field governorate 'name' %}</h4>
+                    <p class="text-muted">{{ governorate.places_count }} {% if LANGUAGE_CODE == 'ar' %}موقع سياحي{% else %}Tourist Place{% if governorate.places_count > 1 %}s{% endif %}{% endif %}</p>
+                    <a href="{% url 'tourism:governorate_detail' governorate.slug %}" class="btn btn-primary">
+                        {% if LANGUAGE_CODE == 'ar' %}استكشف المواقع{% else %}Explore Places{% endif %}
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info text-center">
+                {% if LANGUAGE_CODE == 'ar' %}لا توجد محافظات متاحة حالياً{% else %}No governorates available at the moment{% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,72 @@
+{% extends 'tourism/base.html' %}
+{% load static %}
+{% load localization_tags %}
+
+{% block title %}{% if LANGUAGE_CODE == 'ar' %}خطط الرحلات{% else %}Trip Plans{% endif %} - EgyRoute{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-map-marked-alt text-info"></i> {% if LANGUAGE_CODE == 'ar' %}خطط الرحلات{% else %}Trip Plans{% endif %}</h2>
+        <a href="{% url 'tourism:create_trip_plan' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> {% if LANGUAGE_CODE == 'ar' %}إنشاء خطة جديدة{% else %}Create New Plan{% endif %}
+        </a>
+    </div>
+    
+    {% if trip_plans %}
+        <div class="row g-4">
+            {% for plan in trip_plans %}
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-header bg-{{ plan.status }}-subtle">
+                            <span class="badge bg-{{ plan.status }}">{{ plan.get_status_display }}</span>
+                        </div>
+                        <div class="card-body">
+                            <h5 class="card-title">{{ plan.title }}</h5>
+                            <p class="card-text text-muted">{{ plan.description|truncatewords:20 }}</p>
+                            
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-calendar-alt text-primary"></i> 
+                                    {% if plan.start_date %}
+                                        {{ plan.start_date|date:"Y/m/d" }}
+                                        {% if plan.end_date %} - {{ plan.end_date|date:"Y/m/d" }}{% endif %}
+                                    {% else %}
+                                        {% if LANGUAGE_CODE == 'ar' %}لم يتم تحديد التاريخ{% else %}Date not set{% endif %}
+                                    {% endif %}
+                                </li>
+                                <li><i class="fas fa-clock text-success"></i> {{ plan.get_duration_days }} {% if LANGUAGE_CODE == 'ar' %}يوم{% else %}day{% if plan.get_duration_days > 1 %}s{% endif %}{% endif %}</li>
+                                <li><i class="fas fa-map-marker-alt text-danger"></i> {{ plan.days.count }} {% if LANGUAGE_CODE == 'ar' %}مكان{% else %}place{% if plan.days.count > 1 %}s{% endif %}{% endif %}</li>
+                                {% if plan.budget %}
+                                    <li><i class="fas fa-money-bill text-warning"></i> {{ plan.budget }} {% if LANGUAGE_CODE == 'ar' %}جنيه{% else %}EGP{% endif %}</li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                        <div class="card-footer">
+                            <div class="d-flex justify-content-between">
+                                <a href="{% url 'tourism:trip_plan_detail' plan.id %}" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-eye"></i> {% if LANGUAGE_CODE == 'ar' %}عرض{% else %}View{% endif %}
+                                </a>
+                                <form method="post" action="{% url 'tourism:delete_trip_plan' plan.id %}" 
+                                      onsubmit="return confirm('{% if LANGUAGE_CODE == 'ar' %}هل تريد حذف هذه الخطة؟{% else %}Do you want to delete this plan?{% endif %}');" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-info text-center">
+            <h4><i class="fas fa-info-circle"></i> {% if LANGUAGE_CODE == 'ar' %}لا توجد خطط رحلات{% else %}No trip plans{% endif %}</h4>
+            <p>{% if LANGUAGE_CODE == 'ar' %}ابدأ بإنشاء خطة رحلتك الأولى لتنظيم زياراتك السياحية{% else %}Start by creating your first trip plan to organize your tourist visits{% endif %}</p>
+            <a href="{% url 'tourism:create_trip_plan' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> {% if LANGUAGE_CODE == 'ar' %}إنشاء خطة جديدة{% else %}Create New Plan{% endif %}
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

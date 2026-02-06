@@ -1,0 +1,150 @@
+{% extends 'tourism/base.html' %}
+{% load humanize %}
+{% load localization_tags %}
+
+{% block title %}{{ SITE_NAME }} - {{ content.home_hero_title }}{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <h1 class="display-3 fw-bold mb-4">{{ content.home_hero_title }}</h1>
+        <p class="lead mb-4">{{ content.home_hero_subtitle }}</p>
+        <a href="{% url 'tourism:tour_planner' %}" class="btn btn-light btn-lg">
+            <i class="fas fa-map-marked-alt"></i> {{ content.home_hero_button }}
+        </a>
+    </div>
+</section>
+
+<!-- Stats Section -->
+<section class="stats-section">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <div class="stat-number">{{ stats.total_places }}</div>
+                    <h5>{{ content.stat_places }}</h5>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <div class="stat-number">{{ stats.total_governorates }}</div>
+                    <h5>{{ content.stat_governorates }}</h5>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <div class="stat-number">{{ stats.total_categories }}</div>
+                    <h5>{{ content.stat_categories }}</h5>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Categories Section -->
+<section class="py-5">
+    <div class="container">
+        <h2 class="section-title text-center">{{ content.section_categories }}</h2>
+        <div class="row g-4">
+            {% for category in categories %}
+            <div class="col-md-4">
+                <a href="{% url 'tourism:category_detail' category.slug %}" class="text-decoration-none">
+                    <div class="card text-center h-100">
+                        <div class="card-body">
+                            <div class="category-icon">
+                                <i class="fas {{ category.icon }}"></i>
+                            </div>
+                            <h4 class="card-title">{% get_localized_field category 'name' %}</h4>
+                            <p class="card-text text-muted">{% get_localized_field category 'description' as cat_desc %}{{ cat_desc|safe|truncatewords:20 }}</p>
+                            <span class="badge-custom">
+                                {{ category.get_places_count }} {% if LANGUAGE_CODE == 'ar' %}موقع{% else %}Place{% if category.get_places_count > 1 %}s{% endif %}{% endif %}
+                            </span>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            {% empty %}
+            <div class="col-12">
+                <div class="alert alert-info text-center">
+                    {{ content.no_places }}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Featured Places -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <h2 class="section-title text-center">{{ content.section_featured }}</h2>
+        <div class="row g-4">
+            {% for place in featured_places %}
+            <div class="col-md-4">
+                <div class="card h-100">
+                    {% with main_image=place.get_main_image %}
+                    {% if main_image %}
+                        <img src="{{ main_image.image.url }}" class="card-img-top" alt="{{ place.name }}">
+                    {% else %}
+                        <img src="https://via.placeholder.com/400x250?text={{ place.name }}" class="card-img-top" alt="{{ place.name }}">
+                    {% endif %}
+                    {% endwith %}
+                    <div class="card-body">
+                        <div class="mb-2">
+                            <span class="badge bg-secondary">{% get_localized_field place.category 'name' %}</span>
+                            <span class="badge bg-info">{% get_localized_field place.governorate 'name' %}</span>
+                        </div>
+                        <h5 class="card-title">{% get_localized_field place 'name' %}</h5>
+                        <p class="card-text text-muted">{% get_localized_field place 'short_description' %}</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">
+                                <i class="fas fa-clock"></i> {{ place.get_suggested_duration_display }}
+                            </small>
+                            <small class="text-muted">
+                                <i class="fas fa-eye"></i> {{ place.view_count|intcomma }}
+                            </small>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-transparent">
+                        <a href="{% url 'tourism:place_detail' place.slug %}" class="btn btn-primary w-100">
+                            <i class="fas fa-arrow-{% if LANGUAGE_CODE == 'ar' %}left{% else %}right{% endif %}"></i> {{ content.view_details }}
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12">
+                <div class="alert alert-info text-center">
+                    {{ content.no_places }}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        {% if featured_places %}
+        <div class="text-center mt-4">
+            <a href="{% url 'tourism:all_places' %}" class="btn btn-outline-primary btn-lg">
+                {{ content.view_more }} <i class="fas fa-arrow-{% if LANGUAGE_CODE == 'ar' %}left{% else %}right{% endif %}"></i>
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="py-5" style="background: linear-gradient(135deg, rgba(196,149,59,0.1) 0%, rgba(139,105,20,0.1) 100%);">
+    <div class="container text-center">
+        <h2 class="mb-4">{% if LANGUAGE_CODE == 'ar' %}جاهز لاستكشاف مصر؟{% else %}Ready to Explore Egypt?{% endif %}</h2>
+        <p class="lead mb-4">{% if LANGUAGE_CODE == 'ar' %}دعنا نساعدك في تخطيط رحلة لا تُنسى{% else %}Let us help you plan an unforgettable trip{% endif %}</p>
+        <div class="d-flex gap-3 justify-content-center flex-wrap">
+            <a href="{% url 'tourism:tour_planner' %}" class="btn btn-primary btn-lg">
+                <i class="fas fa-calendar-alt"></i> {{ content.home_hero_button }}
+            </a>
+            <a href="https://wa.me/{{ WHATSAPP_NUMBER }}" target="_blank" class="btn btn-success btn-lg">
+                <i class="fab fa-whatsapp"></i> {{ content.contact_whatsapp }}
+            </a>
+        </div>
+    </div>
+</section>
+{% endblock %}

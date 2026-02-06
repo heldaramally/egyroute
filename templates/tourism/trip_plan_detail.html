@@ -1,0 +1,187 @@
+{% extends 'tourism/base.html' %}
+{% load static %}
+{% load localization_tags %}
+
+{% block title %}{{ trip_plan.title }} - EgyRoute{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <!-- Header -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <h2>{{ trip_plan.title }}</h2>
+                    <p class="text-muted">{{ trip_plan.description }}</p>
+                </div>
+                <span class="badge bg-{{ trip_plan.status }} fs-6">{{ trip_plan.get_status_display }}</span>
+            </div>
+            
+            <div class="row mt-3">
+                <div class="col-md-3">
+                    <i class="fas fa-calendar-alt text-primary"></i>
+                    <strong>{% if LANGUAGE_CODE == 'ar' %}البداية:{% else %}Start:{% endif %}</strong> {{ trip_plan.start_date|date:"Y/m/d"|default:"{% if LANGUAGE_CODE == 'ar' %}غير محدد{% else %}Not set{% endif %}" }}
+                </div>
+                <div class="col-md-3">
+                    <i class="fas fa-calendar-check text-success"></i>
+                    <strong>{% if LANGUAGE_CODE == 'ar' %}النهاية:{% else %}End:{% endif %}</strong> {{ trip_plan.end_date|date:"Y/m/d"|default:"{% if LANGUAGE_CODE == 'ar' %}غير محدد{% else %}Not set{% endif %}" }}
+                </div>
+                <div class="col-md-3">
+                    <i class="fas fa-clock text-info"></i>
+                    <strong>{% if LANGUAGE_CODE == 'ar' %}المدة:{% else %}Duration:{% endif %}</strong> {{ trip_plan.get_duration_days }} {% if LANGUAGE_CODE == 'ar' %}يوم{% else %}day{% if trip_plan.get_duration_days > 1 %}s{% endif %}{% endif %}
+                </div>
+                {% if trip_plan.budget %}
+                <div class="col-md-3">
+                    <i class="fas fa-money-bill text-warning"></i>
+                    <strong>{% if LANGUAGE_CODE == 'ar' %}الميزانية:{% else %}Budget:{% endif %}</strong> {{ trip_plan.budget }} {% if LANGUAGE_CODE == 'ar' %}جنيه{% else %}EGP{% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Trip Days -->
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-map-marked-alt"></i> {% if LANGUAGE_CODE == 'ar' %}برنامج الرحلة{% else %}Trip Program{% endif %}</h5>
+                </div>
+                <div class="card-body">
+                    {% if days_data %}
+                        {% for day_number, day_places in days_data.items %}
+                            <div class="mb-4">
+                                <h5 class="border-bottom pb-2">
+                                    <span class="badge bg-primary">{% if LANGUAGE_CODE == 'ar' %}اليوم{% else %}Day{% endif %} {{ day_number }}</span>
+                                </h5>
+                                
+                                <div class="list-group">
+                                    {% for day in day_places %}
+                                        <div class="list-group-item">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div class="flex-grow-1">
+                                                    <h6 class="mb-1">{% get_localized_field day.place 'name' %}</h6>
+                                                    <small class="text-muted">
+                                                        <i class="fas fa-map-marker-alt"></i> {% get_localized_field day.place.governorate 'name' %}
+                                                        {% if day.visit_time %}
+                                                            | <i class="fas fa-clock"></i> {{ day.visit_time }}
+                                                        {% endif %}
+                                                    </small>
+                                                    {% if day.notes %}
+                                                        <p class="mb-0 mt-1 small"><strong>{% if LANGUAGE_CODE == 'ar' %}ملاحظات:{% else %}Notes:{% endif %}</strong> {{ day.notes }}</p>
+                                                    {% endif %}
+                                                </div>
+                                                <div class="btn-group">
+                                                    <a href="{% url 'tourism:place_detail' day.place.slug %}" 
+                                                       class="btn btn-sm btn-outline-primary">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                    <button onclick="removePlace({{ day.id }})" 
+                                                            class="btn btn-sm btn-outline-danger">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="alert alert-info text-center">
+                            <i class="fas fa-info-circle"></i> {% if LANGUAGE_CODE == 'ar' %}لم تضف أي أماكن للرحلة بعد{% else %}No places added to the trip yet{% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Add Places Sidebar -->
+        <div class="col-md-4">
+            <div class="card shadow-sm sticky-top" style="top: 20px;">
+                <div class="card-header bg-success text-white">
+                    <h6 class="mb-0"><i class="fas fa-plus-circle"></i> إضافة مكان</h6>
+                </div>
+                <div class="card-body">
+                    <form id="addPlaceForm">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label">اختر المكان</label>
+                            <select class="form-select" id="placeSelect" required>
+                                <option value="">-- اختر مكاناً --</option>
+                                {% for place in available_places %}
+                                    <option value="{{ place.id }}">{{ place.name }} - {{ place.governorate.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">اليوم</label>
+                            <input type="number" class="form-control" id="dayNumber" min="1" max="30" value="1" required>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-success w-100">
+                            <i class="fas fa-plus"></i> إضافة
+                        </button>
+                    </form>
+                </div>
+                
+                <div class="card-footer">
+                    <a href="{% url 'tourism:trip_plans_list' %}" class="btn btn-outline-secondary w-100">
+                        <i class="fas fa-arrow-right"></i> العودة للقائمة
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('addPlaceForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const placeId = document.getElementById('placeSelect').value;
+    const dayNumber = document.getElementById('dayNumber').value;
+    
+    if (!placeId) {
+        alert('الرجاء اختيار مكان');
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('place_id', placeId);
+    formData.append('day_number', dayNumber);
+    formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+    
+    fetch('{% url "tourism:add_place_to_plan" trip_plan.id %}', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            location.reload();
+        } else {
+            alert(data.message);
+        }
+    });
+});
+
+function removePlace(dayId) {
+    if (confirm('هل تريد إزالة هذا المكان من الخطة؟')) {
+        fetch(`{% url "tourism:remove_place_from_plan" trip_plan.id 0 %}`.replace('0', dayId), {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                location.reload();
+            }
+        });
+    }
+}
+</script>
+{% endblock %}

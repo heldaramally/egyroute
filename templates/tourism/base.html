@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="{{ LANGUAGE_CODE }}" dir="{% if LANGUAGE_CODE == 'ar' %}rtl{% else %}ltr{% endif %}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="{% block meta_description %}{{ SITE_DESCRIPTION }}{% endblock %}">
+    <meta name="keywords" content="مصر، سياحة، مواقع سياحية، فرعونية، إسلامية، قبطية">
+    <meta name="author" content="EgyRoute">
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="{% block og_title %}{{ SITE_NAME }}{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}{{ SITE_DESCRIPTION }}{% endblock %}">
+    <meta property="og:type" content="website">
+    
+    <title>{% block title %}{{ SITE_NAME }}{% endblock %}</title>
+    
+    <!-- Bootstrap 5 CSS - Dynamic based on language -->
+    {% if LANGUAGE_CODE == 'ar' %}
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+    {% else %}
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    {% endif %}
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts - Cairo -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Leaflet CSS for Maps -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <!-- Custom CSS -->
+    <style>
+        :root {
+            --primary-color: #c4953b;
+            --secondary-color: #8b6914;
+            --accent-color: #e4a853;
+            --dark-color: #2c2416;
+            --light-color: #f8f5f0;
+        }
+        
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: #fff;
+            color: #333;
+        }
+        
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: white !important;
+        }
+        
+        .nav-link {
+            color: rgba(255,255,255,0.9) !important;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        
+        .nav-link:hover {
+            color: white !important;
+            transform: translateY(-2px);
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+        }
+        
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            transition: all 0.3s;
+            overflow: hidden;
+        }
+        
+        .card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+        }
+        
+        .card-img-top {
+            height: 250px;
+            object-fit: cover;
+        }
+        
+        .category-icon {
+            font-size: 3rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+        
+        .hero-section {
+            background: linear-gradient(135deg, rgba(196,149,59,0.9) 0%, rgba(139,105,20,0.9) 100%),
+                        url('https://images.unsplash.com/photo-1572252009286-268acec5ca0a?w=1920') center/cover;
+            color: white;
+            padding: 100px 0;
+            text-align: center;
+        }
+        
+        .whatsapp-float {
+            position: fixed;
+            width: 60px;
+            height: 60px;
+            bottom: 40px;
+            left: 40px;
+            background-color: #25d366;
+            color: #FFF;
+            border-radius: 50px;
+            text-align: center;
+            font-size: 30px;
+            box-shadow: 2px 2px 10px rgba(0,0,0,0.3);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+        
+        .whatsapp-float:hover {
+            background-color: #128c7e;
+            transform: scale(1.1);
+        }
+        
+        footer {
+            background-color: var(--dark-color);
+            color: white;
+            padding: 40px 0 20px;
+            margin-top: 60px;
+        }
+        
+        .badge-custom {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+        
+        .stats-section {
+            background-color: var(--light-color);
+            padding: 40px 0;
+        }
+        
+        .stat-card {
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .stat-number {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+        
+        .section-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--dark-color);
+            margin-bottom: 2rem;
+            position: relative;
+            padding-bottom: 15px;
+        }
+        
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            right: 50%;
+            transform: translateX(50%);
+            width: 100px;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+            border-radius: 2px;
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'tourism:home' %}">
+                <i class="fas fa-route"></i> EgyRoute
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'tourism:home' %}">{{ content.nav_home }}</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'tourism:all_places' %}">{{ content.nav_places }}</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'tourism:governorates_list' %}">{{ content.nav_governorates }}</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'tourism:tour_planner' %}">{{ content.nav_planner }}</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'tourism:about' %}">{{ content.nav_about }}</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'tourism:contact' %}">{{ content.nav_contact }}</a>
+                    </li>
+                </ul>
+                
+                <!-- User Menu -->
+                <ul class="navbar-nav ms-auto">
+                    {% if user.is_authenticated %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" 
+                               data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-user-circle"></i> {{ user.first_name|default:user.username }}
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                                <li><a class="dropdown-item" href="{% url 'tourism:profile' %}">
+                                    <i class="fas fa-user"></i> {{ content.nav_profile }}
+                                </a></li>
+                                <li><a class="dropdown-item" href="{% url 'tourism:saved_places_list' %}">
+                                    <i class="fas fa-bookmark"></i> {{ content.nav_saved }}
+                                </a></li>
+                                <li><a class="dropdown-item" href="{% url 'tourism:trip_plans_list' %}">
+                                    <i class="fas fa-map-marked-alt"></i> {{ content.nav_trips }}
+                                </a></li>
+                                {% if user.is_staff %}
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item text-primary" href="/admin/" target="_blank">
+                                        <i class="fas fa-cog"></i> {% if LANGUAGE_CODE == 'ar' %}لوحة التحكم{% else %}Admin Panel{% endif %}
+                                    </a></li>
+                                {% endif %}
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item text-danger" href="{% url 'tourism:logout' %}">
+                                    <i class="fas fa-sign-out-alt"></i> {{ content.nav_logout }}
+                                </a></li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'tourism:login' %}">
+                                <i class="fas fa-sign-in-alt"></i> {{ content.nav_login }}
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link btn btn-light text-dark px-3 ms-2" href="{% url 'tourism:register' %}">
+                                <i class="fas fa-user-plus"></i> {{ content.nav_register }}
+                            </a>
+                        </li>
+                    {% endif %}
+                    
+                    <!-- Language Switcher -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="languageDropdown" role="button" 
+                           data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-globe"></i> 
+                            {% if LANGUAGE_CODE == 'ar' %}العربية{% else %}English{% endif %}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="languageDropdown">
+                            <li>
+                                <a class="dropdown-item {% if LANGUAGE_CODE == 'ar' %}active{% endif %}" 
+                                   href="{% url 'tourism:set_language' 'ar' %}">
+                                    العربية
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item {% if LANGUAGE_CODE == 'en' %}active{% endif %}" 
+                                   href="{% url 'tourism:set_language' 'en' %}">
+                                    English
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Messages -->
+    {% if messages %}
+        <div class="container mt-3">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- Main Content -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- WhatsApp Float Button -->
+    <a href="https://wa.me/{{ WHATSAPP_NUMBER }}?text=مرحباً، أود الاستفسار عن السياحة في مصر" 
+       class="whatsapp-float" 
+       target="_blank" 
+       title="تواصل عبر واتساب">
+        <i class="fab fa-whatsapp"></i>
+    </a>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4 mb-4">
+                    <h5><i class="fas fa-route"></i> EgyRoute</h5>
+                    <p class="text-white-50">{{ content.footer_description }}</p>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <h5>{{ content.footer_links }}</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="{% url 'tourism:home' %}" class="text-white-50 text-decoration-none">{{ content.nav_home }}</a></li>
+                        <li><a href="{% url 'tourism:all_places' %}" class="text-white-50 text-decoration-none">{{ content.nav_places }}</a></li>
+                        <li><a href="{% url 'tourism:tour_planner' %}" class="text-white-50 text-decoration-none">{{ content.nav_planner }}</a></li>
+                        <li><a href="{% url 'tourism:contact' %}" class="text-white-50 text-decoration-none">{{ content.nav_contact }}</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <h5>{{ content.footer_social }}</h5>
+                    <div class="social-links">
+                        <a href="#" class="text-white me-3"><i class="fab fa-facebook fa-2x"></i></a>
+                        <a href="#" class="text-white me-3"><i class="fab fa-twitter fa-2x"></i></a>
+                        <a href="#" class="text-white me-3"><i class="fab fa-instagram fa-2x"></i></a>
+                        <a href="#" class="text-white"><i class="fab fa-youtube fa-2x"></i></a>
+                    </div>
+                </div>
+            </div>
+            <hr class="bg-white">
+            <div class="text-center text-white-50">
+                <p>&copy; 2026 EgyRoute. {{ content.footer_rights }}.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

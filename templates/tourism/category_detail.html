@@ -1,0 +1,121 @@
+{% extends 'tourism/base.html' %}
+{% load localization_tags %}
+
+{% block title %}{% get_localized_field category 'name' %} - {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <!-- Header -->
+    <div class="text-center mb-5">
+        <div class="category-icon">
+            <i class="fas {{ category.icon }}"></i>
+        </div>
+        <h1>{% get_localized_field category 'name' %}</h1>
+        <p class="lead">{% get_localized_field category 'description' as cat_desc %}{{ cat_desc|safe|truncatewords:30 }}</p>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-md-4">
+                    <select class="form-select" onchange="location.href=this.value;">
+                        <option value="?sort=priority">{% if LANGUAGE_CODE == 'ar' %}الترتيب: الأولوية{% else %}Sort: Priority{% endif %}</option>
+                        <option value="?sort=name" {% if sort_by == 'name' %}selected{% endif %}>{% if LANGUAGE_CODE == 'ar' %}الترتيب: الاسم{% else %}Sort: Name{% endif %}</option>
+                        <option value="?sort=governorate" {% if sort_by == 'governorate' %}selected{% endif %}>{% if LANGUAGE_CODE == 'ar' %}الترتيب: المحافظة{% else %}Sort: Governorate{% endif %}</option>
+                        <option value="?sort=popular" {% if sort_by == 'popular' %}selected{% endif %}>{% if LANGUAGE_CODE == 'ar' %}الترتيب: الأكثر مشاهدة{% else %}Sort: Most Viewed{% endif %}</option>
+                    </select>
+                </div>
+                <div class="col-md-8 text-end">
+                    <span class="text-muted">{% if LANGUAGE_CODE == 'ar' %}إجمالي المواقع:{% else %}Total Places:{% endif %} <strong>{{ places.paginator.count }}</strong></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Places Grid -->
+    <div class="row g-4 mb-4">
+        {% for place in places %}
+        <div class="col-md-4">
+            <div class="card h-100">
+                {% with main_image=place.get_main_image %}
+                {% if main_image %}
+                    <img src="{{ main_image.image.url }}" class="card-img-top" alt="{% get_localized_field place 'name' %}">
+                {% else %}
+                    <img src="https://via.placeholder.com/400x250?text={% get_localized_field place 'name' %}" class="card-img-top" alt="{% get_localized_field place 'name' %}">
+                {% endif %}
+                {% endwith %}
+                <div class="card-body">
+                    <div class="mb-2">
+                        <span class="badge bg-info">{% get_localized_field place.governorate 'name' %}</span>
+                        {% if place.is_featured %}
+                        <span class="badge bg-warning text-dark">{% if LANGUAGE_CODE == 'ar' %}مميز{% else %}Featured{% endif %}</span>
+                        {% endif %}
+                    </div>
+                    <h5 class="card-title">{% get_localized_field place 'name' %}</h5>
+                    <p class="card-text text-muted">{% get_localized_field place 'short_description' as short_desc %}{{ short_desc|truncatewords:15 }}</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">
+                            <i class="fas fa-clock"></i> {{ place.get_suggested_duration_display }}
+                        </small>
+                        <small class="text-muted">
+                            <i class="fas fa-eye"></i> {{ place.view_count }}
+                        </small>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent">
+                    <a href="{% url 'tourism:place_detail' place.slug %}" class="btn btn-primary w-100">
+                        <i class="fas fa-arrow-{% if LANGUAGE_CODE == 'ar' %}left{% else %}right{% endif %}"></i> {% if LANGUAGE_CODE == 'ar' %}اكتشف المزيد{% else %}Discover More{% endif %}
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info text-center">
+                <i class="fas fa-info-circle"></i> {% if LANGUAGE_CODE == 'ar' %}لا توجد مواقع في هذا القسم حالياً{% else %}No places in this category at the moment{% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if places.has_other_pages %}
+    <nav>
+        <ul class="pagination justify-content-center">
+            {% if places.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ places.previous_page_number }}&sort={{ sort_by }}">{% if LANGUAGE_CODE == 'ar' %}السابق{% else %}Previous{% endif %}</a>
+            </li>
+            {% else %}
+            <li class="page-item disabled">
+                <span class="page-link">{% if LANGUAGE_CODE == 'ar' %}السابق{% else %}Previous{% endif %}</span>
+            </li>
+            {% endif %}
+
+            {% for num in places.paginator.page_range %}
+            {% if places.number == num %}
+            <li class="page-item active">
+                <span class="page-link">{{ num }}</span>
+            </li>
+            {% elif num > places.number|add:'-3' and num < places.number|add:'3' %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ num }}&sort={{ sort_by }}">{{ num }}</a>
+            </li>
+            {% endif %}
+            {% endfor %}
+
+            {% if places.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ places.next_page_number }}&sort={{ sort_by }}">{% if LANGUAGE_CODE == 'ar' %}التالي{% else %}Next{% endif %}</a>
+            </li>
+            {% else %}
+            <li class="page-item disabled">
+                <span class="page-link">{% if LANGUAGE_CODE == 'ar' %}التالي{% else %}Next{% endif %}</span>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,154 @@
+{% extends 'tourism/base.html' %}
+{% load localization_tags %}
+
+{% block title %}{% if LANGUAGE_CODE == 'ar' %}خطط رحلتك السياحية{% else %}Plan Your Trip{% endif %} - {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="text-center mb-5">
+                <h1><i class="fas fa-calendar-alt text-primary"></i> {% if LANGUAGE_CODE == 'ar' %}خطط رحلتك السياحية{% else %}Plan Your Tourist Trip{% endif %}</h1>
+                <p class="lead">{% if LANGUAGE_CODE == 'ar' %}دعنا نساعدك في إنشاء برنامج سياحي مخصص حسب عدد أيام إقامتك{% else %}Let us help you create a customized tourist program based on the number of days of your stay{% endif %}</p>
+            </div>
+
+            <!-- Form -->
+            <div class="card shadow-lg mb-5">
+                <div class="card-body p-5">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-4">
+                            <label for="{{ form.days.id_for_label }}" class="form-label h5">
+                                <i class="fas fa-clock text-primary"></i> {% if LANGUAGE_CODE == 'ar' %}كم يوم ستقضي في مصر؟{% else %}How many days will you spend in Egypt?{% endif %}
+                            </label>
+                            {{ form.days }}
+                            {% if form.days.errors %}
+                                <div class="text-danger mt-2">{{ form.days.errors }}</div>
+                            {% endif %}
+                            <small class="form-text text-muted">{% if LANGUAGE_CODE == 'ar' %}يمكنك اختيار من 1 إلى 14 يوم{% else %}You can choose from 1 to 14 days{% endif %}</small>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label h5">
+                                <i class="fas fa-heart text-primary"></i> {% if LANGUAGE_CODE == 'ar' %}ما نوع السياحة المفضل لديك؟{% else %}What is your preferred type of tourism?{% endif %}
+                            </label>
+                            <div class="row">
+                                {% for checkbox in form.categories %}
+                                <div class="col-md-4 mb-3">
+                                    <div class="form-check">
+                                        {{ checkbox }}
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% if form.categories.errors %}
+                                <div class="text-danger mt-2">{{ form.categories.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-magic"></i> {% if LANGUAGE_CODE == 'ar' %}إنشاء البرنامج السياحي{% else %}Create Tourist Program{% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Generated Program -->
+            {% if generated_program %}
+            <div class="card shadow-lg">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">
+                        <i class="fas fa-map-marked-alt"></i> {% if LANGUAGE_CODE == 'ar' %}برنامجك السياحي المخصص{% else %}Your Customized Tourist Program{% endif %}
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <strong>{% if LANGUAGE_CODE == 'ar' %}مدة الرحلة:{% else %}Trip Duration:{% endif %}</strong> {{ generated_program.days }} {% if LANGUAGE_CODE == 'ar' %}أيام{% else %}days{% endif %}
+                    </div>
+
+                    {% for day in generated_program.schedule %}
+                    <div class="mb-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" 
+                                 style="width: 50px; height: 50px; font-size: 1.5rem; font-weight: bold;">
+                                {{ day.day_number }}
+                            </div>
+                            <div class="ms-3">
+                                <h4 class="mb-0">{{ day.title }}</h4>
+                                <small class="text-muted">
+                                    <i class="fas fa-clock"></i> {% if LANGUAGE_CODE == 'ar' %}إجمالي الوقت المتوقع:{% else %}Total expected time:{% endif %} {{ day.total_duration }} {% if LANGUAGE_CODE == 'ar' %}ساعة{% else %}hours{% endif %}
+                                </small>
+                            </div>
+                        </div>
+
+                        <div class="row g-3">
+                            {% for place in day.places %}
+                            <div class="col-md-6">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <div class="d-flex">
+                                            {% with main_image=place.get_main_image %}
+                                            {% if main_image %}
+                                                <img src="{{ main_image.image.url }}" 
+                                                     class="rounded me-3" 
+                                                     style="width: 80px; height: 80px; object-fit: cover;" 
+                                                     alt="{% get_localized_field place 'name' %}">
+                                            {% endif %}
+                                            {% endwith %}
+                                            <div>
+                                                <h6 class="mb-1">{% get_localized_field place 'name' %}</h6>
+                                                <small class="text-muted">
+                                                    <i class="fas fa-map-marker-alt"></i> {% get_localized_field place.governorate 'name' %}
+                                                </small><br>
+                                                <small class="text-muted">
+                                                    <i class="fas fa-clock"></i> {{ place.get_suggested_duration_display }}
+                                                </small>
+                                            </div>
+                                        </div>
+                                        <a href="{% url 'tourism:place_detail' place.slug %}" 
+                                           class="btn btn-sm btn-outline-primary mt-2 w-100">
+                                            {% if LANGUAGE_CODE == 'ar' %}التفاصيل{% else %}Details{% endif %}
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="alert alert-warning">
+                        {% if LANGUAGE_CODE == 'ar' %}عذراً، لا توجد مواقع كافية لإنشاء برنامج بهذه المواصفات.{% else %}Sorry, there are not enough sites to create a program with these specifications.{% endif %}
+                    </div>
+                    {% endfor %}
+
+                    <hr>
+                    <div class="d-grid gap-2">
+                        <button onclick="window.print()" class="btn btn-outline-primary">
+                            <i class="fas fa-print"></i> {% if LANGUAGE_CODE == 'ar' %}طباعة البرنامج{% else %}Print Program{% endif %}
+                        </button>
+                        <a href="https://wa.me/{{ WHATSAPP_NUMBER }}?text={% if LANGUAGE_CODE == 'ar' %}أود الاستفسار عن البرنامج السياحي{% else %}I would like to inquire about the tourist program{% endif %}" 
+                           target="_blank" 
+                           class="btn btn-success">
+                            <i class="fab fa-whatsapp"></i> {% if LANGUAGE_CODE == 'ar' %}تواصل للحجز عبر واتساب{% else %}Contact for booking via WhatsApp{% endif %}
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    @media print {
+        .navbar, .whatsapp-float, footer, .btn {
+            display: none !important;
+        }
+    }
+</style>
+{% endblock %}
