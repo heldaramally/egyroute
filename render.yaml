@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: egyroute
+    env: python
+    region: oregon
+    plan: free
+    buildCommand: bash build.sh
+    startCommand: gunicorn egyroute.wsgi:application
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11
+      - key: DEBUG
+        value: false
+      - key: SECRET_KEY
+        fromDatabase:
+          name: db
+          property: connectionString
